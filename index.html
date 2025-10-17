@@ -180,12 +180,26 @@
         /* 手機螢幕上的響應式調整 */
         @media (max-width: 768px) {
             .summary-grid {
-                grid-template-columns: repeat(2, 1fr); /* 手機上變為2欄 */
+                grid-template-columns: 1fr; /* **關鍵修正：手機上改為單欄堆疊** */
+            }
+            .summary-header {
+                flex-direction: row; /* 保持圖示和文字水平排列 */
+                align-items: center;
+            }
+            .summary-icon {
+                font-size: 2em; /* 微調圖示大小 */
+                margin-right: 15px; /* 增加與文字的間距 */
+                flex-shrink: 0; /* 防止圖示被壓縮 */
             }
             .summary-title {
-                font-size: 1.2em;
+                font-size: 1.1em; /* 調整標題字體大小以適應寬度 */
+                text-align: left; /* 標題靠左對齊 */
+            }
+            .summary-card {
+                padding: 20px;
             }
         }
+        /* --- 互動式成果概述卡片樣式 END --- */
         /* --- 互動式成果概述卡片樣式 END --- */
 		
 		/* --- 策略卡片樣式 START --- */
