@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>114年 AI課程推動成果分析報告</title>
+    <!-- D3.js CDN -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+       <style>
+        body {
+            font-family: 'Noto Sans CJK TC', 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+            background-color: #f4f7f9;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            line-height: 1.8;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        }
+        h1 { text-align: center; color: #1a237e; margin-bottom: 20px; font-size: 2.8em; font-weight: 700; }
+        .subtitle { text-align: center; color: #555; font-size: 1.2em; margin-bottom: 40px; border-bottom: 2px solid #e0e0e0; padding-bottom: 20px; }
+        h2 { color: #0d47a1; margin-top: 50px; margin-bottom: 25px; font-size: 2.2em; border-left: 6px solid #1976d2; padding-left: 15px; }
+        h3 { color: #1976d2; margin-top: 30px; margin-bottom: 15px; font-size: 1.6em; font-weight: 600; }
+        h4 { color: #333; margin-top: 25px; margin-bottom: 10px; font-size: 1.3em; font-weight: 600; }
+        p, ul { font-size: 1.1em; margin-bottom: 15px; color: #444; }
+        ul { list-style-type: none; padding-left: 0; }
+        ul li { position: relative; padding-left: 30px; margin-bottom: 12px; }
+        ul li::before { content: '✓'; position: absolute; left: 0; top: 0; color: #2196f3; font-weight: bold; font-size: 1.2em; }
+        ul ul { margin-top: 10px; margin-left: 20px; }
+        ul ul li::before { content: '›'; color: #64b5f6; }
+        strong { font-weight: bold; color: #1a237e; }
+        .content-section { margin-top: 50px; margin-bottom: 50px; padding: 30px; border-radius: 10px; background-color: #f8f9fa; border: 1px solid #e9ecef; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .section-title { text-align: center; font-size: 1.8em; color: #0d47a1; margin-bottom: 30px; }
+		
+        /* --- 雙影片並排佈局 --- */
+        .dual-video-container { display: flex; flex-wrap: wrap; gap: 25px; margin-top: 30px; }
+        .video-wrapper { flex: 1; min-width: 300px; }
+        .video-wrapper h3 { text-align: center; font-size: 1.4em; margin-bottom: 20px; }
+
+        /* --- 分頁系統樣式 --- */
+        .tab-container { width: 100%; margin-top: 50px; }
+        .tab-nav { display: flex; border-bottom: 2px solid #dee2e6; margin-bottom: 25px; overflow-x: auto; }
+        .tab-link { padding: 12px 20px; cursor: pointer; border: none; background-color: transparent; font-size: 1.1em; color: #495057; margin-bottom: -2px; border-bottom: 3px solid transparent; transition: color 0.3s, border-color 0.3s; white-space: nowrap; }
+        .tab-link:hover { color: #0d47a1; }
+        .tab-link.active { color: #1976d2; border-bottom-color: #1976d2; font-weight: 600; }
+        .tab-content { display: none; animation: fadeIn 0.6s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- 照片網格樣式 --- */
+        .photo-gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .photo-item { aspect-ratio: 4 / 3; background-color: #e0e0e0; border-radius: 8px; overflow: hidden; transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer; }
+        .photo-item:hover { transform: scale(1.05); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+        .photo-item img { width: 100%; height: 100%; object-fit: cover; }
+        @media (max-width: 768px) { .photo-gallery { grid-template-columns: repeat(2, 1fr); } }
+
+        /* --- 影片與圖表樣式 --- */
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; background: #000; border-radius: 8px; box-shadow: 0 6px 15px rgba(0,0,0,0.1); }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        .d3-chart-container { margin-top: 50px; margin-bottom: 50px; padding: 30px; border-radius: 10px; background-color: #f8f9fa; border: 1px solid #e9ecef; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .d3-chart-title { text-align: center; font-size: 1.8em; color: #0d47a1; margin-bottom: 30px; }
+        .bar { fill: #1976d2; } .bar:hover { fill: #0d47a1; }
+        .axis text { font-size: 13px; fill: #555; } .axis path, .axis line { fill: none; stroke: #dcdcdc; }
+        .tooltip { position: absolute; text-align: left; padding: 12px 18px; font-size: 14px; background: rgba(13, 71, 161, 0.95); color: white; border-radius: 8px; pointer-events: none; opacity: 0; z-index: 1000; }
+        .tooltip strong { display: block; margin-bottom: 8px; font-size: 16px; border-bottom: 1px solid rgba(255,255,255,0.5); padding-bottom: 5px; color: #fff; }
+		
+        /* --- Lightbox 燈箱樣式 START --- */
+        .lightbox-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); display: flex; justify-content: center; align-items: center; z-index: 1001; padding: 20px; box-sizing: border-box; visibility: hidden; opacity: 0; transition: visibility 0s 0.3s, opacity 0.3s ease; }
+        .lightbox-overlay.active { visibility: visible; opacity: 1; transition: opacity 0.3s ease; }
+        .lightbox-content { position: relative; max-width: 90vw; max-height: 90vh; text-align: center; }
+        #lightbox-img { max-width: 100%; max-height: 80vh; border-radius: 5px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
+        #lightbox-caption { color: #fff; margin-top: 15px; font-size: 1.1em; line-height: 1.5; text-shadow: 1px 1px 3px rgba(0,0,0,0.7); }
+        .lightbox-close { position: absolute; top: 15px; right: 30px; font-size: 40px; color: #fff; cursor: pointer; transition: color 0.2s; }
+        .lightbox-close:hover { color: #ccc; }
+        /* --- Lightbox 燈箱樣式 END --- */
+		
+		/* --- 頁尾工作人員名單樣式 (電影謝幕版) START --- */
+        .credits-footer {
+            background-color: #f8f9fa; /* 淺灰色背景 */
+            padding: 80px 20px;
+            margin-top: 80px;
+            border-top: 1px solid #e9ecef;
+            text-align: center; /* **關鍵：所有內容置中** */
+        }
+        .credits-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .credits-footer h2 {
+            text-align: center;
+            color: #1a237e; /* 深藍色標題 */
+            margin-bottom: 20px;
+            border: none;
+            padding: 0;
+            font-weight: 700;
+            letter-spacing: 3px; /* 增加字距 */
+        }
+        .credits-divider {
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(to right, #1976d2, #64b5f6); /* 藍色漸層分隔線 */
+            margin: 0 auto 60px auto;
+            border-radius: 2px;
+        }
+        .credit-group {
+            margin-bottom: 40px;
+        }
+        .credit-title {
+            color: #1976d2; /* 亮藍色職稱 */
+            font-size: 1.1em;
+            font-weight: 500;
+            margin: 0 0 10px 0;
+            letter-spacing: 1px;
+        }
+        .credit-names {
+            color: #2c3e50; /* 深灰色人名/單位 */
+            font-size: 1.3em;
+            font-weight: 600;
+            line-height: 1.8;
+        }
+        .credit-names span {
+            margin: 0 8px; /* 名字之間的間距 */
+            white-space: nowrap;
+        }
+        /* --- 頁尾工作人員名單樣式 (電影謝幕版) END --- */
+		
+		/* --- 互動式成果概述卡片樣式 START --- */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* 2x2 網格 */
+            gap: 25px;
+            margin-top: 10px;
+        }
+        .summary-card {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 25px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+        }
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        .summary-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .summary-icon {
+            font-size: 2.5em;
+            color: #1976d2;
+        }
+        .summary-title {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #1a237e;
+            margin: 0;
+        }
+        .summary-details {
+            max-height: 0; /* 預設隱藏 */
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, margin-top 0.5s ease-in-out;
+            font-size: 1.05em;
+            color: #555;
+            line-height: 1.7;
+        }
+        .summary-card.active .summary-details {
+            max-height: 200px; /* 展開時的高度，可根據內容調整 */
+            margin-top: 20px; /* 展開時增加間距 */
+        }
+        /* 手機螢幕上的響應式調整 */
+        @media (max-width: 768px) {
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr); /* 手機上變為2欄 */
+            }
+            .summary-title {
+                font-size: 1.2em;
+            }
+        }
+        /* --- 互動式成果概述卡片樣式 END --- */
+		
+		/* --- 策略卡片樣式 START --- */
+        .strategy-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 水平三欄 */
+            gap: 25px;
+            margin-top: 10px;
+        }
+        .strategy-card {
+            position: relative;
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+            overflow: hidden;
+        }
+        .strategy-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+            border-color: #1976d2;
+        }
+        .strategy-icon-wrapper {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 20px auto;
+            background-color: #e3f2fd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #1976d2;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        .strategy-card:hover .strategy-icon-wrapper {
+            background-color: #1976d2;
+            border-color: #0d47a1;
+        }
+        .strategy-icon-wrapper span {
+            font-size: 1.8em;
+            color: #1976d2;
+            transition: color 0.3s ease;
+        }
+        .strategy-card:hover .strategy-icon-wrapper span {
+            color: #ffffff;
+        }
+        .strategy-title {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #1a237e;
+            margin: 0 0 15px 0;
+        }
+        .strategy-summary {
+            font-size: 1.05em;
+            color: #555;
+            line-height: 1.7;
+            height: 100px; /* 給摘要預留固定高度 */
+        }
+        .strategy-details {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(255, 255, 255, 1) 80%, rgba(255, 255, 255, 0));
+            padding: 60px 30px 30px 30px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            font-size: 1em;
+            color: #333;
+        }
+        .strategy-card:hover .strategy-details {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        /* 手機螢幕上的響應式調整 */
+        @media (max-width: 992px) {
+            .strategy-container {
+                grid-template-columns: 1fr; /* 手機上變為單欄堆疊 */
+            }
+            .strategy-summary {
+                height: auto; /* 在單欄模式下取消固定高度 */
+            }
+            .strategy-details {
+                /* 在手機上，因為卡片會變長，所以預設就顯示詳細資訊 */
+                position: static;
+                opacity: 1;
+                transform: none;
+                background: none;
+                padding: 15px 0 0 0;
+            }
+        }
+        /* --- 策略卡片樣式 END --- */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI 課程推廣成果與持續賦能策略</h1>
+        <p class="subtitle">114年度成果分析摘要報告</p>
+
+        <!-- === 互動式成果概述區塊 START === -->
+        <h2>AI 課程推廣成果概述</h2>
+        <div class="summary-grid">
+            <!-- 卡片1: 成果顯著 -->
+            <div class="summary-card">
+                <div class="summary-header">
+                    <span class="summary-icon">🚀</span>
+                    <h3 class="summary-title">317人次參與，啟動數位轉型</h3>
+                </div>
+                <div class="summary-details">
+                    <p>自2025年6月至10月共舉辦12場AI應用課程，成功啟動了從高層至基層的數位轉型，總參與人次達317人。顯示了公司在推動AI知識普及方面取得了初步成效。</p>
+                </div>
+            </div>
+
+            <!-- 卡片2: 滿意度 -->
+            <div class="summary-card">
+                <div class="summary-header">
+                    <span class="summary-icon">⭐</span>
+                    <h3 class="summary-title">99%超高滿意度，奠定信心</h3>
+                </div>
+                <div class="summary-details">
+                    <p>AI 課程在「執行面」獲得了全面性的成功，滿意度高達99%。這為後續的深度應用和全面推廣奠定了極佳的信心基礎。</p>
+                </div>
+            </div>
+			
+			<!-- 卡片3: 學習途徑多元 -->
+            <div class="summary-card">
+                <div class="summary-header">
+                    <span class="summary-icon">📚</span>
+                    <h3 class="summary-title">多元學習途徑，提升彈性</h3>
+                </div>
+                <div class="summary-details">
+                    <p>提供了實體、視訊、ALOHA平台等多樣化的學習途徑，有助於滿足不同員工的需求和偏好，提升了學習的彈性與可及性。</p>
+                </div>
+            </div>
+
+            <!-- 卡片4: 學員回饋 -->
+            <div class="summary-card">
+                <div class="summary-header">
+                    <span class="summary-icon">💬</span>
+                    <h3 class="summary-title">正面回饋湧現，渴望進階</h3>
+                </div>
+                <div class="summary-details">
+                    <p>學員回饋表達高度肯定與讚賞，並強烈要求增加課程場次與時數、對進階課程的渴望、以及對持續辦理的期待。</p>
+                </div>
+            </div>
+        </div>
+        <!-- === 互動式成果概述區塊 END === -->
+        <!-- === 課程錄影專區 START === -->
+        <h2>課程錄影展示</h2>
+        <div class="dual-video-container">
+            <div class="video-wrapper">
+                <h3>課程錄影 (上集)</h3>
+                <div class="video-container">
+                    <iframe width="560" height="315" src="https://www.youtube.com/embed/KfddrVgl81U?si=uVFw70y4GUSJlcCU" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="video-wrapper">
+                <h3>課程錄影 (下集)</h3>
+                <div class="video-container">
+                    <iframe width="560" height="315" src="https://www.youtube.com/embed/Po4tK8gGkR4?si=fc3r4aByVcxUsfz8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                </div>
+            </div>
+        </div>
+        <!-- === 課程錄影專區 END === -->
+		<!-- === 分頁媒體區塊 START === -->
+		<h2>課程精彩瞬間</h2>		
+        <div class="tab-container">
+            <!-- 分頁導覽按鈕 -->
+            <div class="tab-nav">
+                <button class="tab-link active" data-tab="tab-main-office">高雄場</button>
+                <button class="tab-link" data-tab="tab-keelung">基隆場</button>
+                <button class="tab-link" data-tab="tab-taichung">臺中場</button>
+                <button class="tab-link" data-tab="tab-hualien">花蓮場</button>
+            </div>
+
+            <!-- 分頁內容區域 -->
+            <div class="tab-content-area">
+                <!-- 高雄場內容 -->
+                <div id="tab-main-office" class="tab-content active">
+                    <h3 class="section-title">高雄場 - 各課程照片</h3>
+                    <div class="photo-gallery">
+                        <div class="photo-item" data-src="img/khh (1).jpg" data-caption="高雄場照片1" title="高雄場照片1"><img src="img/khh (1).jpg" alt="高雄場 照片 1"></div>
+                        <div class="photo-item" data-src="img/khh (2).jpg" data-caption="高雄場照片2" title="高雄場照片2"><img src="img/khh (2).jpg" alt="高雄場 照片 2"></div>
+                        <div class="photo-item" data-src="img/khh (3).jpg" data-caption="高雄場照片3" title="高雄場照片3"><img src="img/khh (3).jpg" alt="高雄場 照片 3"></div>
+                        <div class="photo-item" data-src="img/khh (4).jpg" data-caption="高雄場照片4" title="高雄場照片4"><img src="img/khh (4).jpg" alt="高雄場 照片 4"></div>
+						<div class="photo-item" data-src="img/khh (5).jpg" data-caption="高雄場照片5" title="高雄場照片5"><img src="img/khh (5).jpg" alt="高雄場 照片 5"></div>
+						<div class="photo-item" data-src="img/khh (6).jpg" data-caption="高雄場照片6" title="高雄場照片6"><img src="img/khh (6).jpg" alt="高雄場 照片 6"></div>
+                    </div>                    
+                </div>
+
+                <!-- 基隆場內容 -->
+                <div id="tab-keelung" class="tab-content">
+                    <h3 class="section-title">基隆場 - 各課程照片</h3>
+                    <div class="photo-gallery">
+                        <div class="photo-item" data-src="img/kel (1).jpg" data-caption="基隆場照片1" title="基隆場照片1"><img src="img/kel (1).jpg" alt="基隆場 照片 1"></div>
+                        <div class="photo-item" data-src="img/kel (2).jpg" data-caption="基隆場照片2" title="基隆場照片2"><img src="img/kel (2).jpg" alt="基隆場 照片 2"></div>
+                        <div class="photo-item" data-src="img/kel (3).jpg" data-caption="基隆場照片3" title="基隆場照片3"><img src="img/kel (3).jpg" alt="基隆場 照片 3"></div>
+                        <div class="photo-item" data-src="img/kel (4).jpg" data-caption="基隆場照片4" title="基隆場照片4"><img src="img/kel (4).jpg" alt="基隆場 照片 4"></div>
+						<div class="photo-item" data-src="img/kel (5).jpg" data-caption="基隆場照片5" title="基隆場照片5"><img src="img/kel (5).jpg" alt="基隆場 照片 5"></div>
+						<div class="photo-item" data-src="img/kel (6).jpg" data-caption="基隆場照片6" title="基隆場照片6"><img src="img/kel (6).jpg" alt="基隆場 照片 6"></div>
+                    </div>               
+                </div>
+
+                <!-- 臺中場內容 -->
+                <div id="tab-taichung" class="tab-content">
+                    <h3 class="section-title">臺中場 - 各課程照片</h3>
+                    <div class="photo-gallery">
+                        <div class="photo-item" data-src="img/txg (1).jpg" data-caption="台中場照片1" title="台中場照片1"><img src="img/txg (1).jpg" alt="台中場 照片 1"></div>
+                        <div class="photo-item" data-src="img/txg (2).jpg" data-caption="台中場照片2" title="台中場照片2"><img src="img/txg (2).jpg" alt="台中場 照片 2"></div>
+                        <div class="photo-item" data-src="img/txg (3).jpg" data-caption="台中場照片3" title="台中場照片3"><img src="img/txg (3).jpg" alt="台中場 照片 3"></div>
+                        <div class="photo-item" data-src="img/txg (4).jpg" data-caption="台中場照片4" title="台中場照片4"><img src="img/txg (4).jpg" alt="台中場 照片 4"></div>
+						<div class="photo-item" data-src="img/txg (5).jpg" data-caption="台中場照片5" title="台中場照片5"><img src="img/txg (5).jpg" alt="台中場 照片 5"></div>
+						<div class="photo-item" data-src="img/txg (6).jpg" data-caption="台中場照片6" title="台中場照片6"><img src="img/txg (6).jpg" alt="台中場 照片 6"></div>
+                    </div>                   
+                </div>
+
+                <!-- 花蓮場內容 -->
+                <div id="tab-hualien" class="tab-content">
+					<h3 class="section-title">花蓮場 - 二級主管課程照片</h3>
+                    <div class="photo-gallery">
+                        <div class="photo-item" data-src="img/hll (1).jpg" data-caption="花蓮場照片1" title="花蓮場照片1"><img src="img/hll (1).jpg" alt="花蓮場 照片 1"></div>
+                        <div class="photo-item" data-src="img/hll (2).jpg" data-caption="花蓮場照片2" title="花蓮場照片2"><img src="img/hll (2).jpg" alt="花蓮場 照片 2"></div>
+                        <div class="photo-item" data-src="img/hll (3).jpg" data-caption="花蓮場照片3" title="花蓮場照片3"><img src="img/hll (3).jpg" alt="花蓮場 照片 3"></div>
+                        <div class="photo-item" data-src="img/hll (4).jpg" data-caption="花蓮場照片4" title="花蓮場照片4"><img src="img/hll (4).jpg" alt="花蓮場 照片 4"></div>
+						<div class="photo-item" data-src="img/hll (5).jpg" data-caption="花蓮場照片5" title="花蓮場照片5"><img src="img/hll (5).jpg" alt="花蓮場 照片 5"></div>
+						<div class="photo-item" data-src="img/hll (6).jpg" data-caption="花蓮場照片6" title="花蓮場照片6"><img src="img/hll (6).jpg" alt="花蓮場 照片 6"></div>
+                    </div> 
+            </div>
+        </div>
+        <!-- === 分頁媒體區塊 END === -->
+
+        <!-- === 策略卡片區塊 START === -->
+        <h2>後續推廣「精準賦能」策略</h2>
+        <div class="strategy-container">
+            <!-- 策略1: 深度應用 -->
+            <div class="strategy-card">
+                <div class="strategy-icon-wrapper">
+                    <span>01</span>
+                </div>
+                <h3 class="strategy-title">深度應用</h3>
+                <p class="strategy-summary">聚焦實務工作坊，旨在將AI知識落地，直接創造業務價值。</p>
+                <div class="strategy-details">
+                    <p>這是一個務實的目標，確保學習成果能夠轉化為實際效益。</p>
+                </div>
+            </div>
+
+            <!-- 策略2: 區域補強 -->
+            <div class="strategy-card">
+                <div class="strategy-icon-wrapper">
+                    <span>02</span>
+                </div>
+                <h3 class="strategy-title">區域補強</h3>
+                <p class="strategy-summary">針對覆蓋率較低的區域和主管層級設計激勵方案。</p>
+                <div class="strategy-details">
+                    <p>顯示已意識到各地區及層級間的參與差異，並計畫針對性解決。這與數據分析結果高度吻合，證明策略的針對性。</p>
+                </div>
+            </div>
+
+            <!-- 策略3: 持續進化 -->
+            <div class="strategy-card">
+                <div class="strategy-icon-wrapper">
+                    <span>03</span>
+                </div>
+                <h3 class="strategy-title">持續進化</h3>
+                <p class="strategy-summary">鼓勵全員持續學習，確保使用AI能力與時俱進。</p>
+                <div class="strategy-details">
+                    <p>可通過定期更新專區、舉辦線上挑戰賽、建立學習社群等方式，強調長期學習和創新轉型的願景。</p>
+                </div>
+            </div>
+        </div>
+        <!-- === 策略卡片區塊 END === -->
+
+        <h2>AI 課程各公司別總參與人次統計分析</h2>
+        
+        <div class="d3-chart-container">
+            <h3 class="d3-chart-title">一級主管課程參與覆蓋率分析</h3>
+            <div id="firstLevelChart"></div>
+        </div>
+
+        <h2>一級主管課程參與覆蓋率分析</h2>
+        <ul>
+            <li><strong>目標達成度高</strong>: 總體覆蓋率達71.3% (87/122)，顯示一級主管的參與度普遍較高。</li>
+            <li><strong>區域表現差異大</strong>:
+                <ul>
+                    <li><strong>基隆分公司表現最佳</strong>: 100%覆蓋率 (26/26)，實現全員參訓，值得肯定和借鑒經驗。</li>
+                    <li><strong>臺中分公司表現優秀</strong>: 70.8%覆蓋率 (17/24)，位居次位，顯示主管參與度高。</li>
+                    <li><strong>總公司覆蓋率最低</strong>: 56.7% (21/37)，儘管參與人數最多，但由於基數較高，覆蓋率相對最低。這可能是由於總公司部門多樣，部分主管可能未被有效觸達。</li>
+                    <li><strong>高雄分公司有待加強</strong>: 69.2%覆蓋率 (18/26)，作為課程舉辦地點之一，其覆蓋率仍低於基隆及臺中分公司，需要進一步分析原因。</li>
+                    <li><strong>花蓮分公司</strong>: 55.6%覆蓋率 (5/9)，人數最少但覆蓋率過半。</li>
+                </ul>
+            </li>
+            <li><strong>洞見</strong>: 總公司和高雄分公司的一級主管是「區域補強」策略需要重點關注的對象。可以研究基隆分公司全員參訓的成功因素，並推廣至其他地区。</li>
+        </ul>
+
+        <div class="d3-chart-container">
+            <h3 class="d3-chart-title">二級主管課程參與覆蓋率分析</h3>
+            <div id="secondLevelChart"></div>
+        </div>
+
+        <h2>二級主管課程參與覆蓋率分析</h2>
+        <ul>
+            <li><strong>總體覆蓋率尚可</strong>: 總體覆蓋率為65.3% (145/222)，略低於一級主管，這可能是由於二級主管人數基數更大，推廣難度更高。</li>
+            <li><strong>區域表現差異顯著</strong>:
+                <ul>
+                    <li><strong>花蓮分公司覆蓋率最高</strong>: 100% (15/15)，表現極佳，儘管人數少，但其高覆蓋率證明了在特定環境下全面推廣的可行性。</li>
+                    <li><strong>基隆分公司表現優異</strong>: 82.7% (43/52)，在有大量二級主管的單位中表現最佳。</li>
+                    <li><strong>高雄分公司覆蓋率最低</strong>: 47.9% (34/71)，儘管主管人數最多(71人)，但覆蓋率不足五成。這是一個非常重要的警示，顯示高雄分公司在二級主管層級的AI推廣存在嚴重瓶頸。</li>
+                    <li><strong>總公司與臺中分公司表現中等</strong>: 分別為64.7% (33/51) 和60.6% (20/33)。臺中分公司參與主要集中於實體課程，可能需要考慮更多元化的學習方式以提高彈性。</li>
+                </ul>
+            </li>
+            <li><strong>洞見</strong>: 花蓮和基隆分公司在二級主管層級的成功經驗值得深入研究。高雄分公司是二級主管推廣的重中之重，急需制定專屬激勵方案和更有效的觸達機制，以解決其覆蓋率過低的問題。總公司和臺中分公司可考慮擴展學習途徑，提高參與便利性。</li>
+        </ul>
+
+        <div class="d3-chart-container">
+            <h3 class="d3-chart-title">AI 課程滿意度調查結果</h3>
+            <div id="satisfactionChart"></div>
+        </div>
+
+        <h2>AI 課程滿意度調查結果洞見分析</h2>
+        <p>這五項指標均達到 <strong>99%</strong> 的驚人高度，這在一般企業培訓中是非常罕見且卓越的成績。這傳遞了以下關鍵訊息：</p>
+        <ul>
+            <li><strong>課程品質獲得高度認可</strong>:
+                <ul>
+                    <li><strong>講師端</strong>: 「講師專業程度」與「互動效果」皆為 99%，顯示講師不僅具備深厚的專業知識，且擁有極佳的教學技巧，能有效帶動學員參與，非單向灌輸。</li>
+                    <li><strong>內容端</strong>: 「本課程是否對學員幫助」達 99%，證明課程內容設計精準，切中學員需求，具備高度的實用價值。</li>
+                </ul>
+            </li>
+            <li><strong>強大的續辦民意基礎</strong>:
+                <ul>
+                    <li>「應繼續辦理此課程」達 99%，這為後續推廣策略中的「持續進化」提供了最強有力的支持。高滿意度能形成良好的內部口碑，有助於解決部分區域參與率不高的問題（透過口碑吸引）。</li>
+                </ul>
+            </li>
+            <li><strong>後勤支援體系完善</strong>:
+                <ul>
+                    <li>「對現場資訊處助教的滿意度」達 99%。對於 AI 數位類型的課程，軟硬體環境與即時技術支援至關重要。此數據顯示資訊處提供了完美的現場支援，確保了學習過程順暢無阻，功不可沒。</li>
+                </ul>
+            </li>
+        </ul>
+        <p><strong>總結</strong>: AI 課程在「執行面」獲得了全面性的成功。這為後續的深度應用和全面推廣奠定了極佳的信心基礎。</p>
+
+        <!-- ... 後續內容保持不變 ... -->
+        <h2>學員回饋分析</h2>
+        <p>除了量化數據的高滿意度，學員的質化回饋進一步證明了課程的成功與潛力。以下是回饋的關鍵主題與洞見：</p>
+        <ul>
+            <li>
+                <h4>高度肯定與讚賞</h4>
+                <ul>
+                    <li>許多學員表示「很實用」、「超讚」、「太強了」，並提到「講師真的懂得很多，生動活潑，十分滿意」，特別點名「欣緯副座講師超級強大專業」。這強化了講師專業度與課程實用性的高評價。</li>
+                    <li>對於現場資訊處的協助也給予高度評價，如「隨堂資訊處人員很盡責及提供協助，非常感謝！」、「資訊處同仁很棒！」。</li>
+                    <li>部分回饋流露出對公司未來發展的願景，例如「看到港務公司的未來了」。</li>
+                </ul>
+            </li>
+            <li>
+                <h4>強烈要求增加課程場次與時數</h4>
+                <ul>
+                    <li>「只可惜只抽到一堂課程，希望可以再加開」、「希望多多舉辦」、「多開始課程」、「應繼續開AI應用課程」。這表明學員對課程的需求遠大於現有供給。</li>
+                    <li>「希望可以讓學員連貫上三堂，選三場只有中其中一或二有點可惜」指出學員希望有更系統、連貫的學習機會。</li>
+                    <li>「時間太短，以後可增加授課時數」、「時間可以再多一點，內容豐富精彩！」、「課程很實用、講師很專業，可惜時間太短」、「幫助非常大，建議增加時數，更理解及熟練」。這反映出課程內容豐富，但學員渴望更深入的學習時間。</li>
+                </ul>
+            </li>
+            <li>
+                <h4>對進階課程的渴望</h4>
+                <ul>
+                    <li>「希望上AI進階版課程。」顯示部分學員在基礎課程後，已有能力和意願繼續深化學習。</li>
+                    <li>「希望可以開一系列的課程」也呼應了對系統性、進階學習路徑的需求。</li>
+                </ul>
+            </li>
+            <li>
+                <h4>具體改進建議</h4>
+                <ul>
+                    
+                    <li><strong>課程推廣</strong>: 「也希望這些實用的課程內容可以讓承辦夥伴可以知道，以更提高實用性與效率」指出課程宣傳和潛在應用場景的溝通有改進空間。</li>
+                </ul>
+            </li>
+            <li>
+                <h4>持續辦理的期待</h4>
+                <ul>
+                    <li>「應繼續辦理此課程」、「再上一次」、「續為辦理此相關課程」、「很棒的課程，請繼續辦理！」、「受益良多，持續辦理！」等多處表達了對課程持續舉辦的堅定支持。</li>
+                    <li>「希望可以定期辦理分享」建議將此類分享常態化。</li>
+                </ul>
+            </li>
+        </ul>
+        <p><strong>洞見總結</strong>: 學員回饋與量化滿意度高度一致，表明課程的品質和講師能力是其成功的核心。最突出的需求是「更多」和「更深」的課程機會，以及對系統化學習路徑的期待。同時，也收到了寶貴的行政優化建議，有助於提升學員體驗。</p>
+
+
+        <h2>總結與建議</h2>
+        <ol style="list-style-type: decimal; padding-left: 30px;">
+            <li style="margin-bottom: 20px;">
+                <h4>肯定初期成果</h4>
+                <p>公司在AI課程推廣方面取得了良好開端，總體參與人數和多樣化的學習途徑都值得肯定。</p>
+            </li>
+            <li style="margin-bottom: 20px;">
+                <h4>聚焦「區域補強」</h4>
+                <p>數據分析明確指出，高雄分公司在兩個層級的主管覆蓋率均為最低（或相對較低），臺中分公司在總體參與上偏低，總公司在一級主管層級的覆蓋率最低。這些區域應成為「區域補強」策略的重點，應深入了解其低覆蓋率的原因（如排班問題、工作負荷、推廣不足、課程吸引力等），並量身定制解決方案，例如提供彈性更高的學習時間、主管參與承諾制、績效連結等。</p>
+              
+            </li>
+            <li style="margin-bottom: 20px;">
+                <h4>推廣成功經驗</h4>
+                <p>基隆分公司在一級、二級主管層級都表現突出，花蓮分公司在二級主管層級實現了100%覆蓋。應深入分析這些成功案例，提取可複製的經驗，並推廣到其他分公司。</p>
+            </li>
+            <li style="margin-bottom: 20px;">
+                <h4>持續優化線上平台利用率</h4>
+                <p>鼓勵全員持續利用ALOHA平台，可以通過定期更新內外部AI宣導專區、舉辦線上挑戰賽、建立學習社群等方式，使其真正成為持續賦能的核心動力。</p>
+            </li>
+        </ol>
+        <p style="text-align: center; margin-top: 50px; font-size: 1.2em; color: #1a237e; font-weight: bold;">
+            這份報告清晰地呈現了AI課程推廣的現狀與挑戰，為公司制定下一步的「精準賦能」策略提供了堅實的數據支持。
+        </p>
+
+    </div>
+	
+	<!-- === 頁尾工作人員名單 (電影謝幕版) START === -->
+    <footer class="credits-footer">
+        <div class="credits-container">
+            <h2>工作人員名單</h2>
+            <div class="credits-divider"></div>
+
+            <div class="credit-group">
+                <p class="credit-title">課程主辦單位</p>
+                <p class="credit-names">總公司人力資源處</p>
+            </div>
+            
+            <div class="credit-group">
+                <p class="credit-title">協力單位</p>
+                <p class="credit-names">
+                    <span>總公司資訊處</span>・<span>各分公司人事處及資訊處</span>
+                </p>
+            </div>
+
+            <div class="credit-group">
+                <p class="credit-title">授課講師</p>
+                <p class="credit-names">林欣緯</p>
+            </div>
+            
+            <div class="credit-group">
+                <p class="credit-title">主要助教</p>
+                <p class="credit-names">
+                    <span>陳盈利</span>・<span>李坤樺</span>・<span>柯伯暉</span>・<span>王志明</span>・<span>李偉明</span>・<span>蔡淑惠</span>
+                </p>
+            </div>
+
+            <div class="credit-group">
+                <p class="credit-title">協力助教</p>
+                <p class="credit-names">
+                    <span>朱家祺</span>・<span>陳靖雅</span>・<span>蔡明倫</span>・<span>陳宗揚</span>・<span>胡澤駿</span><br>
+                    <span>李佳紋</span>・<span>朱世軒</span>・<span>胡修榮</span>・<span>吳玥潔</span>・<span>張耀文</span>・<span>蔡宗憲</span>
+                </p>
+            </div>
+
+            <div class="credit-group">
+                <p class="credit-title">課程主辦工作人員</p>
+                <p class="credit-names">
+                    <span>邵瀞儀</span>・<span>胡雅婷</span>・<span>陳慧萍</span>・<span>謝芠欣</span>
+                </p>
+            </div>
+
+        </div>
+    </footer>
+    <!-- === 頁尾工作人員名單 (電影謝幕版) END === -->
+	
+	<!-- === Lightbox 彈出視窗 START === -->
+    <div id="lightbox" class="lightbox-overlay">
+        <span class="lightbox-close">&times;</span>
+        <div class="lightbox-content">
+            <img id="lightbox-img" src="" alt="Enlarged image">
+            <div id="lightbox-caption"></div>
+        </div>
+    </div>
+    <!-- === Lightbox 彈出視窗 END === -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- D3 圖表腳本 START (保持不變，為簡潔省略) ---
+        const firstLevelData = [ { company: '基隆分公司', total: 26, participants: 26, coverage: 100.0 }, { company: '臺中分公司', total: 24, participants: 17, coverage: 70.8 }, { company: '高雄分公司', total: 26, participants: 18, coverage: 69.2 }, { company: '總公司', total: 37, participants: 21, coverage: 56.7 }, { company: '花蓮分公司', total: 9, participants: 5, coverage: 55.6 } ]; firstLevelData.forEach((d, i) => d.rank = i + 1); const secondLevelData = [ { company: '花蓮分公司', total: 15, participants: 15, coverage: 100.0 }, { company: '基隆分公司', total: 52, participants: 43, coverage: 82.7 }, { company: '總公司', total: 51, participants: 33, coverage: 64.7 }, { company: '臺中分公司', total: 33, participants: 20, coverage: 60.6 }, { company: '高雄分公司', total: 71, participants: 34, coverage: 47.9 } ]; secondLevelData.forEach((d, i) => d.rank = i + 1); const satisfactionData = [ { item: '講師專業程度', value: 99 }, { item: '講師與學員互動效果', value: 99 }, { item: '本課程是否對學員幫助', value: 99 }, { item: '應繼續辦理此課程', value: 99 }, { item: '對現場資訊處助教的滿意度', value: 99 } ]; function createBarChart(selector, data) { d3.select(selector).select("svg").remove(); const containerWidth = d3.select(selector).node().getBoundingClientRect().width; const margin = { top: 40, right: 30, bottom: 80, left: 60 }; const width = containerWidth > 0 ? containerWidth - margin.left - margin.right : 300; const height = 450 - margin.top - margin.bottom; const svg = d3.select(selector).append("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", `translate(${margin.left},${margin.top})`); const x = d3.scaleBand().range([0, width]).domain(data.map(d => d.company)).padding(0.3); const y = d3.scaleLinear().range([height, 0]).domain([0, 105]); svg.append("g").attr("class", "axis x-axis").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x)).selectAll("text").attr("transform", "translate(-10,5)rotate(-45)").style("text-anchor", "end"); svg.append("g").attr("class", "axis y-axis").call(d3.axisLeft(y).ticks(5).tickFormat(d => d + "%")); svg.append("text").attr("transform", "rotate(-90)").attr("y", 0 - margin.left).attr("x", 0 - (height / 2)).attr("dy", "1em").style("text-anchor", "middle").text("參與覆蓋率 (%)"); let tooltip = d3.select("body").select(".tooltip"); if (tooltip.empty()) { tooltip = d3.select("body").append("div").attr("class", "tooltip"); } svg.selectAll(".bar").data(data).enter().append("rect").attr("class", "bar").attr("x", d => x(d.company)).attr("y", height).attr("width", x.bandwidth()).attr("height", 0).on("mouseover", function(event, d) { d3.select(this).attr("stroke", "#1a237e").attr("stroke-width", 2); tooltip.transition().duration(200).style("opacity", 1); tooltip.html(`<strong>${d.company}</strong>總人數: ${d.total} 人<br/>參訓人數: ${d.participants} 人<br/>覆蓋率: ${d.coverage.toFixed(1)}%<br/>排名: ${d.rank}`).style("left", (event.pageX + 15) + "px").style("top", (event.pageY - 28) + "px"); }).on("mouseout", function(d) { d3.select(this).attr("stroke", "none"); tooltip.transition().duration(500).style("opacity", 0); }).transition().duration(800).delay((d, i) => i * 100).attr("y", d => y(d.coverage)).attr("height", d => height - y(d.coverage)); } function createHorizontalBarChart(selector, data) { d3.select(selector).select("svg").remove(); const containerWidth = d3.select(selector).node().getBoundingClientRect().width; const margin = { top: 20, right: 60, bottom: 40, left: 220 }; const width = containerWidth > 0 ? containerWidth - margin.left - margin.right : 300; const height = Math.max(250, data.length * 50) - margin.top - margin.bottom; const svg = d3.select(selector).append("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", `translate(${margin.left},${margin.top})`); const x = d3.scaleLinear().range([0, width]).domain([0, 100]); const y = d3.scaleBand().range([height, 0]).domain(data.map(d => d.item)).padding(0.3); svg.append("g").attr("class", "axis x-axis").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x).ticks(5).tickFormat(d => d + "%")); svg.append("text").attr("x", width / 2).attr("y", height + margin.bottom - 5).style("text-anchor", "middle").text("滿意度 (%)"); svg.append("g").attr("class", "axis y-axis").call(d3.axisLeft(y)); let tooltip = d3.select("body").select(".tooltip"); if (tooltip.empty()) { tooltip = d3.select("body").append("div").attr("class", "tooltip"); } svg.selectAll(".bar-horizontal").data(data).enter().append("rect").attr("class", "bar").attr("x", 0).attr("y", d => y(d.item)).attr("width", 0).attr("height", y.bandwidth()).on("mouseover", function(event, d) { d3.select(this).attr("stroke", "#1a237e").attr("stroke-width", 2); tooltip.transition().duration(200).style("opacity", 1); tooltip.html(`<strong>${d.item}</strong>滿意度: ${d.value}%`).style("left", (event.pageX + 15) + "px").style("top", (event.pageY - 28) + "px"); }).on("mouseout", function(d) { d3.select(this).attr("stroke", "none"); tooltip.transition().duration(500).style("opacity", 0); }).transition().duration(800).delay((d, i) => i * 100).attr("width", d => x(d.value)); }
+		
+		//新增處
+		function createBarChart(selector, data) {
+            d3.select(selector).select("svg").remove();
+            const containerWidth = d3.select(selector).node().getBoundingClientRect().width;
+            const margin = { top: 40, right: 30, bottom: 80, left: 60 };
+            const width = containerWidth > 0 ? containerWidth - margin.left - margin.right : 300;
+            const height = 450 - margin.top - margin.bottom;
+            const svg = d3.select(selector).append("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+            const x = d3.scaleBand().range([0, width]).domain(data.map(d => d.company)).padding(0.3);
+            const y = d3.scaleLinear().range([height, 0]).domain([0, 105]);
+            svg.append("g").attr("class", "axis x-axis").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x)).selectAll("text").attr("transform", "translate(-10,5)rotate(-45)").style("text-anchor", "end");
+            svg.append("g").attr("class", "axis y-axis").call(d3.axisLeft(y).ticks(5).tickFormat(d => d + "%"));
+            svg.append("text").attr("transform", "rotate(-90)").attr("y", 0 - margin.left).attr("x", 0 - (height / 2)).attr("dy", "1em").style("text-anchor", "middle").text("參與覆蓋率 (%)");
+            let tooltip = d3.select("body").select(".tooltip");
+            if (tooltip.empty()) { tooltip = d3.select("body").append("div").attr("class", "tooltip"); }
+            svg.selectAll(".bar").data(data).enter().append("rect").attr("class", "bar").attr("x", d => x(d.company)).attr("y", height).attr("width", x.bandwidth()).attr("height", 0).on("mouseover", function(event, d) { d3.select(this).attr("stroke", "#1a237e").attr("stroke-width", 2); tooltip.transition().duration(200).style("opacity", 1); tooltip.html(`<strong>${d.company}</strong><br>總人數: ${d.total}<br>參與: ${d.participants}<br>覆蓋率: ${d.coverage.toFixed(1)}%`).style("left", (event.pageX + 15) + "px").style("top", (event.pageY - 28) + "px"); }).on("mouseout", function(d) { d3.select(this).attr("stroke", "none"); tooltip.transition().duration(500).style("opacity", 0); }).transition().duration(800).delay((d, i) => i * 100).attr("y", d => y(d.coverage)).attr("height", d => height - y(d.coverage));
+        }
+
+        function createHorizontalBarChart(selector, data) {
+            d3.select(selector).select("svg").remove();
+            const containerWidth = d3.select(selector).node().getBoundingClientRect().width;
+            const margin = { top: 20, right: 60, bottom: 40, left: 220 };
+            const width = containerWidth > 0 ? containerWidth - margin.left - margin.right : 300;
+            const height = Math.max(250, data.length * 50) - margin.top - margin.bottom;
+            const svg = d3.select(selector).append("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+            const x = d3.scaleLinear().range([0, width]).domain([0, 100]);
+            const y = d3.scaleBand().range([height, 0]).domain(data.map(d => d.item)).padding(0.3);
+            svg.append("g").attr("class", "axis x-axis").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x).ticks(5).tickFormat(d => d + "%"));
+            svg.append("text").attr("x", width / 2).attr("y", height + margin.bottom - 5).style("text-anchor", "middle").text("滿意度 (%)");
+            svg.append("g").attr("class", "axis y-axis").call(d3.axisLeft(y));
+            let tooltip = d3.select("body").select(".tooltip");
+            if (tooltip.empty()) { tooltip = d3.select("body").append("div").attr("class", "tooltip"); }
+            svg.selectAll(".bar-horizontal").data(data).enter().append("rect").attr("class", "bar").attr("x", 0).attr("y", d => y(d.item)).attr("width", 0).attr("height", y.bandwidth()).on("mouseover", function(event, d) { d3.select(this).attr("stroke", "#1a237e").attr("stroke-width", 2); tooltip.transition().duration(200).style("opacity", 1); tooltip.html(`<strong>${d.item}</strong><br>滿意度: ${d.value}%`).style("left", (event.pageX + 15) + "px").style("top", (event.pageY - 28) + "px"); }).on("mouseout", function(d) { d3.select(this).attr("stroke", "none"); tooltip.transition().duration(500).style("opacity", 0); }).transition().duration(800).delay((d, i) => i * 100).attr("width", d => x(d.value));
+        }
+
+        function drawCharts() {
+            createBarChart("#firstLevelChart", firstLevelData);
+            createBarChart("#secondLevelChart", secondLevelData);
+            createHorizontalBarChart("#satisfactionChart", satisfactionData);
+        }
+        drawCharts(); 
+			window.addEventListener('resize', drawCharts);
+        // --- D3 圖表腳本 END ---
+
+        // --- 全局變數 ---
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+        const lightboxCaption = document.getElementById('lightbox-caption');
+        const lightboxClose = document.querySelector('.lightbox-close');
+
+        // --- Lightbox 函數 ---
+        function openLightbox(item) {
+            const imgSrc = item.getAttribute('data-src');
+            const imgCaption = item.getAttribute('data-caption');
+            if (!imgSrc || imgSrc.trim() === '') return;
+            lightboxImg.setAttribute('src', imgSrc);
+            lightboxCaption.textContent = imgCaption;
+            lightbox.classList.add('active');
+        }
+        function closeLightbox() {
+            lightbox.classList.remove('active');
+            setTimeout(() => { lightboxImg.setAttribute('src', ''); }, 300);
+        }
+
+        // --- 為照片項目綁定 Lightbox 事件 ---
+        function initializeLightboxFor(container) {
+            const photoItems = container.querySelectorAll('.photo-item');
+            photoItems.forEach(item => {
+                // 為確保功能純淨，先移除可能存在的舊監聽器
+                item.removeEventListener('click', item.clickHandler); 
+                // 定義新的處理函數並綁定
+                item.clickHandler = () => openLightbox(item);
+                item.addEventListener('click', item.clickHandler);
+            });
+        }
+        
+        // --- 分頁系統函數 ---
+        function initializeTabs() {
+            const tabLinks = document.querySelectorAll('.tab-link');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    // **關鍵修正**：這裡的 'data-tab' 屬性值必須與內容區塊的 'id' 完全匹配
+                    const tabId = link.getAttribute('data-tab');
+                    const targetContent = document.getElementById(tabId);
+
+                    if (!targetContent) {
+                        console.error("找不到對應的分頁內容: #" + tabId); // 添加錯誤提示
+                        return; 
+                    }
+
+                    // 移除所有按鈕和內容的 active class
+                    tabLinks.forEach(item => item.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+
+                    // 為被點擊的按鈕和對應內容加上 active class
+                    link.classList.add('active');
+                    targetContent.classList.add('active');
+                    
+                    // 重新為當前顯示的分頁內容綁定燈箱功能
+                    initializeLightboxFor(targetContent);
+                });
+            });
+        }
+
+        // --- 頁面載入後執行 ---
+        initializeTabs();
+
+        // 找到預設顯示的分頁並為其初始化燈箱
+        const initialActiveTab = document.querySelector('.tab-content.active');
+        if (initialActiveTab) {
+            initializeLightboxFor(initialActiveTab);
+        }
+
+        // 為燈箱的關閉按鈕和背景添加事件監聽
+        lightboxClose.addEventListener('click', closeLightbox);
+        lightbox.addEventListener('click', (e) => { if (e.target === lightbox) { closeLightbox(); } });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && lightbox.classList.contains('active')) { closeLightbox(); } });
+
+    });
+	
+	// --- 成果概述卡片點擊功能 ---
+        const summaryCards = document.querySelectorAll('.summary-card');
+        summaryCards.forEach(card => {
+            card.addEventListener('click', () => {
+                // 如果點擊的卡片已經是 active，則只移除 active class (收合)
+                if (card.classList.contains('active')) {
+                    card.classList.remove('active');
+                } else {
+                    // 否則，先移除所有卡片的 active class
+                    summaryCards.forEach(c => c.classList.remove('active'));
+                    // 然後再為被點擊的卡片添加 active class (展開)
+                    card.classList.add('active');
+                }
+            });
+        });
+  </script>
+</body>
+</html>
