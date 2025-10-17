@@ -295,6 +295,53 @@
             }
         }
         /* --- 策略卡片樣式 END --- */
+
+		/* --- 滿意度圓環圖樣式 START --- */
+        .satisfaction-container {
+            margin-top: 50px;
+            margin-bottom: 30px;
+            padding: 30px;
+            border-radius: 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .donut-charts-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr); /* 電腦上 5 欄 */
+            gap: 20px;
+        }
+        .donut-chart-wrapper {
+            text-align: center;
+        }
+        .donut-chart-wrapper svg {
+            max-width: 100%;
+            height: auto;
+        }
+        .donut-chart-label {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #555;
+            font-weight: 500;
+            line-height: 1.5;
+            height: 45px; /* 給標籤一個固定高度以對齊 */
+        }
+        /* 手機螢幕上的響應式調整 */
+        @media (max-width: 992px) {
+            .donut-charts-grid {
+                grid-template-columns: repeat(3, 1fr); /* 平板 3 欄 */
+            }
+        }
+        @media (max-width: 768px) {
+            .donut-charts-grid {
+                grid-template-columns: repeat(2, 1fr); /* 手機 2 欄 */
+            }
+            .donut-chart-label {
+                font-size: 13px;
+                height: 40px;
+            }
+        }
+        /* --- 滿意度圓環圖樣式 END --- */
     </style>
 </head>
 <body>
@@ -516,10 +563,14 @@
             <li><strong>洞見</strong>: 花蓮和基隆分公司在二級主管層級的成功經驗值得深入研究。高雄分公司是二級主管推廣的重中之重，急需制定專屬激勵方案和更有效的觸達機制，以解決其覆蓋率過低的問題。總公司和臺中分公司可考慮擴展學習途徑，提高參與便利性。</li>
         </ul>
 
-        <div class="d3-chart-container">
+        <!-- === 滿意度圓環圖區塊 START === -->
+        <div class="satisfaction-container">
             <h3 class="d3-chart-title">AI 課程滿意度調查結果</h3>
-            <div id="satisfactionChart"></div>
+            <div class="donut-charts-grid">
+                <!-- 這裡的 div 會由 D3.js 自動填入圖表 -->
+            </div>
         </div>
+        <!-- === 滿意度圓環圖區塊 END === -->
 
         <h2>AI 課程滿意度調查結果洞見分析</h2>
         <p>這五項指標均達到 <strong>99%</strong> 的驚人高度，這在一般企業培訓中是非常罕見且卓越的成績。這傳遞了以下關鍵訊息：</p>
@@ -695,27 +746,80 @@
             svg.selectAll(".bar").data(data).enter().append("rect").attr("class", "bar").attr("x", d => x(d.company)).attr("y", height).attr("width", x.bandwidth()).attr("height", 0).on("mouseover", function(event, d) { d3.select(this).attr("stroke", "#1a237e").attr("stroke-width", 2); tooltip.transition().duration(200).style("opacity", 1); tooltip.html(`<strong>${d.company}</strong><br>總人數: ${d.total}<br>參與: ${d.participants}<br>覆蓋率: ${d.coverage.toFixed(1)}%`).style("left", (event.pageX + 15) + "px").style("top", (event.pageY - 28) + "px"); }).on("mouseout", function(d) { d3.select(this).attr("stroke", "none"); tooltip.transition().duration(500).style("opacity", 0); }).transition().duration(800).delay((d, i) => i * 100).attr("y", d => y(d.coverage)).attr("height", d => height - y(d.coverage));
         }
 
-        function createHorizontalBarChart(selector, data) {
-            d3.select(selector).select("svg").remove();
-            const containerWidth = d3.select(selector).node().getBoundingClientRect().width;
-            const margin = { top: 20, right: 60, bottom: 40, left: 220 };
-            const width = containerWidth > 0 ? containerWidth - margin.left - margin.right : 300;
-            const height = Math.max(250, data.length * 50) - margin.top - margin.bottom;
-            const svg = d3.select(selector).append("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-            const x = d3.scaleLinear().range([0, width]).domain([0, 100]);
-            const y = d3.scaleBand().range([height, 0]).domain(data.map(d => d.item)).padding(0.3);
-            svg.append("g").attr("class", "axis x-axis").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x).ticks(5).tickFormat(d => d + "%"));
-            svg.append("text").attr("x", width / 2).attr("y", height + margin.bottom - 5).style("text-anchor", "middle").text("滿意度 (%)");
-            svg.append("g").attr("class", "axis y-axis").call(d3.axisLeft(y));
-            let tooltip = d3.select("body").select(".tooltip");
-            if (tooltip.empty()) { tooltip = d3.select("body").append("div").attr("class", "tooltip"); }
-            svg.selectAll(".bar-horizontal").data(data).enter().append("rect").attr("class", "bar").attr("x", 0).attr("y", d => y(d.item)).attr("width", 0).attr("height", y.bandwidth()).on("mouseover", function(event, d) { d3.select(this).attr("stroke", "#1a237e").attr("stroke-width", 2); tooltip.transition().duration(200).style("opacity", 1); tooltip.html(`<strong>${d.item}</strong><br>滿意度: ${d.value}%`).style("left", (event.pageX + 15) + "px").style("top", (event.pageY - 28) + "px"); }).on("mouseout", function(d) { d3.select(this).attr("stroke", "none"); tooltip.transition().duration(500).style("opacity", 0); }).transition().duration(800).delay((d, i) => i * 100).attr("width", d => x(d.value));
-        }
+		function createDonutChart(data) {
+            const container = d3.select(".donut-charts-grid");
+            const size = 150; // 圖表大小
+            const thickness = 20; // 環圈厚度
 
+            const chartWrappers = container.selectAll(".donut-chart-wrapper")
+                .data(data)
+                .enter()
+                .append("div")
+                .attr("class", "donut-chart-wrapper");
+
+            const svg = chartWrappers.append("svg")
+                .attr("width", size)
+                .attr("height", size);
+                
+            const g = svg.append("g")
+                .attr("transform", `translate(${size / 2}, ${size / 2})`);
+
+            const arc = d3.arc()
+                .innerRadius(size / 2 - thickness)
+                .outerRadius(size / 2)
+                .startAngle(0);
+
+            // 背景圓環
+            g.append("path")
+                .datum({ endAngle: 2 * Math.PI })
+                .style("fill", "#e6e6e6")
+                .attr("d", arc);
+
+            // 進度圓環
+            const foreground = g.append("path")
+                .datum({ endAngle: 0 })
+                .style("fill", "#1976d2")
+                .attr("d", arc);
+            
+            // 中間的百分比文字
+            const text = g.append("text")
+                .attr("text-anchor", "middle")
+                .attr("dy", ".35em")
+                .style("font-size", "28px")
+                .style("font-weight", "bold")
+                .style("fill", "#1a237e")
+                .text("0%");
+
+            // 下方的標籤文字
+            chartWrappers.append("p")
+                .attr("class", "donut-chart-label")
+                .text(d => d.item);
+
+            // 加入動畫效果
+            foreground.transition()
+                .duration(1500)
+                .attrTween("d", function(d) {
+                    const interpolate = d3.interpolate(d.endAngle, 2 * Math.PI * (d.value / 100));
+                    return function(t) {
+                        d.endAngle = interpolate(t);
+                        return arc(d);
+                    };
+                });
+
+            text.transition()
+                .duration(1500)
+                .tween("text", function(d) {
+                    const interpolate = d3.interpolate(0, d.value);
+                    return function(t) {
+                        d3.select(this).text(Math.round(interpolate(t)) + "%");
+                    };
+                });
+        }
+		
         function drawCharts() {
             createBarChart("#firstLevelChart", firstLevelData);
             createBarChart("#secondLevelChart", secondLevelData);
-            createHorizontalBarChart("#satisfactionChart", satisfactionData);
+            createDonutChart(satisfactionData);
         }
         drawCharts(); 
 			window.addEventListener('resize', drawCharts);
